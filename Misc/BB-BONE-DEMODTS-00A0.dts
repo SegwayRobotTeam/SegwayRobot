@@ -1,0 +1,157 @@
+/*
+ * Copyright (C) 2015
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ */
+
+/*  This is a template to write (and understand) the Device Tree Overlay configuration */
+
+/*  Needed DATA for each PIN:
+
+                Example                 Url
+
+    $PIN:       P8_13                   http://elinux.org/Beagleboard:Cape_Expansion_Headers
+    $MUX:       gpmc_ad9                https://github.com/jadonk/bonescript/blob/master/src/bone.js
+    $OFFSET:    0x024                   https://github.com/jadonk/bonescript/blob/master/src/bone.js
+    $MODE:      0x4                     http://www.ti.com/lit/ug/spruh73l/spruh73l.pdf (TPM)
+                                        Look for conf_$MUX and reach the section to the right
+                                        From the Cape_Expansion_Headers table find the selected MODE
+    $HWIP:      ehrpwm2                 https://github.com/beagleboard/linux/blob/3.8/arch/arm/boot/dts/am33xx.dtsi
+                                        Get the name of the selected MODE from Cape_Expansion_Headers e.g. ehrpwm2B or gpmc_ad9
+                                        Search in the previous link  all the fist section of the name e.g. ehrpwm2 or gpmc
+                                        Oss: if there is a subsection (e.g. ehrpwm2 you need to pick up also the container epwmss2)
+*/
+
+/dts-v1/;
+/plugin/;
+ 
+/ {
+   	compatible = "ti,beaglebone", "ti,beaglebone-black";
+ 
+        /*
+         *  Identification
+         */
+	part-number = "BB-BONE-DEMODTS";  /* Name of the Virtual Cape */
+	version = "00A0";                 /* Version of the Virtual Cape */
+
+	/*
+	 * state the resources this cape uses
+	 */
+	exclusive-use =
+		/*
+		 *  All the pins used
+		 */
+		"${PIN_1}"        /* E.g. uses HWIP_1 */
+		"${PIN_2}"        /* E.g. uses HWIP_1 */
+		"${PIN_3}"        /* E.g. uses HWIP_2 */
+		"${PIN_4}"        /* E.g. uses HWIP_3 */
+		/*
+		*  The hardware ip used
+		*/
+		"${HWIP_1}",      /* E.g. it contains the HWIP_3 and HWIP_4 in am33xx.dtsi (ehrpwm0 inside epwmss0)*/
+		"${HWIP_2}",      /* E.g. it contains the HWIP_5 in am33xx.dtsi */
+		"${HWIP_3}",       
+		"${HWIP_4}",
+		"${HWIP_5}";
+
+	/*
+	 *  Fragment type#1 for pinmux (select the correct pinmux for the defined PINS)
+	 */
+	fragment@0
+		{
+			target = <&am33xx_pinmux>;
+			__overlay__
+				{
+                   
+					bbb_${HWIP_3}_pins: pinmux_bbb_${HWIP_1}_pins
+					{
+						pinctrl-single,pins =
+							<
+								${OFFSET_PIN_1} ${MODE_PIN_1}   /* For $PIN_1 */
+								${OFFSET_PIN_2} ${MODE_PIN_2}   /* For $PIN_2 */
+							>;
+					};
+						bbb_${HWIP_4}_pins: pinmux_bbb_${HWIP_2}_pins
+					{
+						pinctrl-single,pins =
+							<
+								${OFFSET_PIN_3} ${MODE_PIN_3}   /* For $PIN_3 */
+							>;
+					};
+						bbb_${HWIP_5}_pins: pinmux_bbb_${HWIP_3}_pins
+					{
+						pinctrl-single,pins =
+							<
+								${OFFSET_PIN_4} ${MODE_PIN_4}   /* For $PIN_4 */
+							>;
+					};
+				};
+		};
+	
+	/*
+	 * Fragments type#2 to enable the hardware and assign the subsystem to the defined PINS
+	 * (could be containers or specific peripherals)
+	 */
+               
+	/*
+	 *  Containers: are not always present (it's true e.g. fot pwm subsystems)
+	 */
+	fragment@1
+		{
+			target = <&${HWIP_1}>;
+			__overlay__
+				{
+					status = "okay";
+					pinctrl-names = "default";
+				};
+		};
+
+	fragment@2
+		{
+			target = <&${HWIP_2}>;
+			__overlay__
+				{
+					status = "okay";
+					pinctrl-names = "default";
+				};
+		};
+
+	/*
+	 *  Peripherals
+	 */
+	fragment@3
+		{
+			target = <&${HWIP_3}>;
+			__overlay__
+				{
+					status = "okay";
+					pinctrl-names = "default";
+					pinctrl-0 = <&bbb_${HWIP_3}_pins>;
+				};
+		};
+
+	fragment@4
+		{
+			target = <&${HWIP_4}>;
+			__overlay__
+				{
+					status = "okay";
+					pinctrl-names = "default";
+					pinctrl-0 = <bbb_${HWIP_4}_pins>;
+				};
+		};
+
+	fragment@5
+		{
+			target = <&${HWIP_5}>;
+			__overlay__
+				{
+					status = "okay";
+					pinctrl-names = "default";
+					pinctrl-0 = <bbb_${HWIP_5}_pins>;
+				};
+		};
+};
