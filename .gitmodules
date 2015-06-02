@@ -1,0 +1,3 @@
+[submodule "Code/Class/BBBIOlib"]
+	path = Code/Class/BBBIOlib
+	url = https://github.com/VegetableAvenger/BBBIOlib.git
